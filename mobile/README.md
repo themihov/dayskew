@@ -30,7 +30,26 @@ flutter run
 
 The app targets the public API by default (`https://dayskew.danailmihov.com/api`,
 whose `/api` prefix is stripped by a reverse proxy on the server). For local
-dev, override it (Android emulators reach the host via `10.0.2.2`):
+dev, override it (Android emulators reach the host via `10.0.2.2`).
+
+### Environment variables
+
+Values are baked in at **compile time** via `--dart-define`, so they come from
+an `.env` file rather than runtime config. Copy the template, fill in values,
+then pass the file to Flutter:
+
+```sh
+cp .env.example .env
+# edit .env ...
+
+flutter run --dart-define-from-file=.env
+flutter build apk --release --dart-define-from-file=.env
+```
+
+`.env` is gitignored; `.env.example` documents the available keys
+(`GOOGLE_CLIENT_ID`, `API_BASE_URL`).
+
+The equivalent one-liner without a file:
 
 ```sh
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
@@ -50,10 +69,11 @@ Requirements:
    - Create an **OAuth 2.0 Web client ID** (for `GOOGLE_CLIENT_ID` below).
    - Create an **OAuth 2.0 Android client** for package `dev.dayskew.dayskew`
      using your release keystore **SHA-1** fingerprint.
-2. Pass the web client id at build time:
+2. Pass the web client id at build time (inline, or via `.env`):
 
 ```sh
 flutter build apk --release --dart-define=GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+# or: flutter build apk --release --dart-define-from-file=.env
 ```
 
 Without a configured client id, the save button shows an explanatory
