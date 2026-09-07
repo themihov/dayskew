@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' as cal;
 import 'package:http/http.dart' as http;
@@ -36,8 +37,9 @@ class GoogleCalendarService {
       'https://www.googleapis.com/auth/calendar';
 
   /// Optional web/server OAuth client id, injected with --dart-define.
-  static const String configuredClientId =
-      String.fromEnvironment('GOOGLE_CLIENT_ID');
+  static const String configuredClientId = String.fromEnvironment(
+    'GOOGLE_CLIENT_ID',
+  );
 
   final GoogleSignIn _signIn;
   bool _initialized = false;
@@ -47,10 +49,14 @@ class GoogleCalendarService {
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
     // Must be called exactly once and completed before any other call.
-    await _signIn.initialize(
-      serverClientId:
-          configuredClientId.isEmpty ? null : configuredClientId,
-    );
+    debugPrint('auth: initialize sign-in plugin…');
+    await _signIn
+        .initialize(
+          serverClientId: configuredClientId.isEmpty
+              ? null
+              : configuredClientId,
+        )
+        .timeout(_stepTimeout);
     _initialized = true;
   }
 
@@ -58,12 +64,29 @@ class GoogleCalendarService {
   Future<GoogleSignInAccount> _authenticate() async {
     await _ensureInitialized();
 
-    final lightweight =
-        await _signIn.attemptLightweightAuthentication();
-    if (lightweight != null) return lightweight;
-
+    debugPrint('auth: lightweight auth attempt…');
+    GoogleSignInAccount? lightweight;
     try {
-      return await _signIn.authenticate(scopeHint: [calendarScope]);
+      lightweight = await _signIn.attemptLightweightAuthentication()?.timeout(
+        _lightweightTimeout,
+      );
+    } catch (e) {
+      debugPrint(
+        'auth: lightweight auth timed out or failed ($e), falling back to prompt…',
+      );
+    }
+
+    if (lightweight != null) {
+      debugPrint('auth: lightweight account ${lightweight.email}');
+      return lightweight;
+    }
+
+    debugPrint('auth: no lightweight account, prompting…');
+    try {
+      debugPrint('auth: showing sign-in sheet…');
+      return await _signIn
+          .authenticate(scopeHint: [calendarScope])
+          .timeout(_stepTimeout);
     } on GoogleSignInException catch (e) {
       switch (e.code) {
         case GoogleSignInExceptionCode.canceled:
@@ -81,10 +104,17 @@ class GoogleCalendarService {
 
   Future<String> _accessToken(GoogleSignInAccount account) async {
     final client = account.authorizationClient;
-    final authz = await client.authorizationForScopes([calendarScope]) ??
-        await client.authorizeScopes([calendarScope]);
+    var authz = await client
+        .authorizationForScopes([calendarScope])
+        .timeout(_stepTimeout);
+    authz ??= await client
+        .authorizeScopes([calendarScope])
+        .timeout(_stepTimeout);
     return authz.accessToken;
   }
+
+  static const Duration _stepTimeout = Duration(seconds: 30);
+  static const Duration _lightweightTimeout = Duration(seconds: 6);
 
   /// Saves every placed task on [date] as a Google Calendar event.
   Future<DaySaveResult> saveDay({
@@ -95,13 +125,18 @@ class GoogleCalendarService {
       throw const CalendarNothingToSaveException();
     }
 
+    debugPrint('saveDay: authenticating…');
     final account = await _authenticate();
+    debugPrint('saveDay: signed in as ${account.email}');
     final token = await _accessToken(account);
+    debugPrint('saveDay: token obtained');
 
     final client = _AuthHttpClient(token);
     final api = cal.CalendarApi(client);
     try {
+      debugPrint('saveDay: ensuring calendar…');
       final calendarId = await _ensureCalendar(api);
+      debugPrint('saveDay: calendar ready ($calendarId)');
 
       int created = 0;
       int failed = 0;
@@ -119,9 +154,14 @@ class GoogleCalendarService {
         );
 
         try {
-          await api.events.insert(event, calendarId);
+          debugPrint('saveDay: inserting "${placed.task.name}"…');
+          await api.events.insert(event, calendarId).timeout(_stepTimeout);
+          debugPrint('saveDay: inserted "${placed.task.name}"');
           created++;
-        } catch (_) {
+        } catch (e, st) {
+          debugPrint(
+            'GoogleCalendarService: insert failed for "${placed.task.name}": $e\n$st',
+          );
           failed++;
         }
       }
@@ -134,18 +174,20 @@ class GoogleCalendarService {
 
   /// Finds the DaySkew calendar (by summary), creating it if missing.
   Future<String> _ensureCalendar(cal.CalendarApi api) async {
-    final list = await api.calendarList.list();
+    final list = await api.calendarList.list().timeout(_stepTimeout);
     final existing = (list.items ?? [])
         .where((c) => c.summary == calendarName)
         .firstOrNull;
     if (existing?.id != null) return existing!.id!;
 
-    final created = await api.calendars.insert(
-      cal.Calendar(
-        summary: calendarName,
-        description: 'Computed days from DaySkew',
-      ),
-    );
+    final created = await api.calendars
+        .insert(
+          cal.Calendar(
+            summary: calendarName,
+            description: 'Computed days from DaySkew',
+          ),
+        )
+        .timeout(_stepTimeout);
     return created.id!;
   }
 
@@ -154,10 +196,10 @@ class GoogleCalendarService {
     final tier = t.isLocked
         ? 'LOCKED'
         : t.priority == 1
-            ? 'HIGH'
-            : t.priority == 2
-                ? 'MED'
-                : 'LOW';
+        ? 'HIGH'
+        : t.priority == 2
+        ? 'MED'
+        : 'LOW';
     final sensitivities = <String>[
       if (t.isStartSensitive) 'start>=${t.preferredStart}',
       if (t.isEndSensitive) 'end<=${t.rigidEnd}',
