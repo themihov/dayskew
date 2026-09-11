@@ -1,27 +1,43 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
-/// DaySkew neo-brutal palette, per the AGENTS.md design system.
+/// Semantic color system built on Apple's dynamic system colors.
+///
+/// Every token is a [CupertinoDynamicColor] so it automatically adapts to
+/// light/dark appearance and high-contrast accessibility settings. Resolve a
+/// token against a [BuildContext] with [resolve] (or the `rc` extension)
+/// before painting it on a custom surface.
 abstract final class AppColors {
-  static const Color canvas = Color(0xFF0F1117);
-  static const Color canvasLight = Color(0xFFF9FAFB);
-  static const Color surface = Color(0xFF171A23);
-  static const Color border = Color(0xFF2E3444);
+  // Surfaces.
+  static const CupertinoDynamicColor background = CupertinoColors.systemBackground;
+  static const CupertinoDynamicColor groupedBackground =
+      CupertinoColors.systemGroupedBackground;
+  static const CupertinoDynamicColor secondaryBackground =
+      CupertinoColors.secondarySystemBackground;
+  static const CupertinoDynamicColor groupedSecondaryBackground =
+      CupertinoColors.secondarySystemGroupedBackground;
+  static const CupertinoDynamicColor fill = CupertinoColors.systemFill;
 
-  static const Color lockedBase = Color(0xFF000000);
-  static const Color lockedBorder = Color(0xFFFFFFFF);
+  // Content.
+  static const CupertinoDynamicColor label = CupertinoColors.label;
+  static const CupertinoDynamicColor secondaryLabel = CupertinoColors.secondaryLabel;
+  static const CupertinoDynamicColor tertiaryLabel = CupertinoColors.tertiaryLabel;
+  static const CupertinoDynamicColor separator = CupertinoColors.separator;
 
-  static const Color high = Color(0xFFEC3750); // Hack Club crimson
-  static const Color medium = Color(0xFFFF8C37); // electric amber
-  static const Color low = Color(0xFF33D6A6); // cyber mint
-  static const Color conflict = Color(0xFFF5A623); // arcade gold
+  // Accents.
+  static const CupertinoDynamicColor accent = CupertinoColors.systemBlue;
 
-  static const Color textPrimary = Color(0xFFE8EAF0);
-  static const Color textMuted = Color(0xFF9AA3B5);
+  static const CupertinoDynamicColor high = CupertinoColors.systemRed;
+  static const CupertinoDynamicColor medium = CupertinoColors.systemOrange;
+  static const CupertinoDynamicColor low = CupertinoColors.systemGreen;
+  static const CupertinoDynamicColor conflict = CupertinoColors.systemYellow;
+  static const CupertinoDynamicColor locked = CupertinoColors.systemIndigo;
 
-  static const Color shadow = Color(0xFF000000);
+  /// Resolves a dynamic token for the current appearance.
+  static Color resolve(BuildContext context, Color color) =>
+      CupertinoDynamicColor.resolve(color, context);
 
   /// Returns the tier color for a task priority (1 = high, 2 = medium, 3 = low).
-  static Color forPriority(int priority) {
+  static CupertinoDynamicColor forPriority(int priority) {
     switch (priority) {
       case 1:
         return high;
@@ -32,18 +48,22 @@ abstract final class AppColors {
     }
   }
 
-  static const String priorityLabel1 = 'HIGH';
-  static const String priorityLabel2 = 'MED';
-  static const String priorityLabel3 = 'LOW';
-
+  /// Title-case priority name used in badges and rows.
   static String priorityLabel(int priority) {
     switch (priority) {
       case 1:
-        return priorityLabel1;
+        return 'High';
       case 2:
-        return priorityLabel2;
+        return 'Medium';
       default:
-        return priorityLabel3;
+        return 'Low';
     }
   }
+}
+
+/// Convenience: resolve any [Color] against a context, adapting dynamic
+/// system colors to the current light/dark appearance.
+extension ResolvedColor on Color {
+  // ignore: non_constant_identifier_names
+  Color rc(BuildContext context) => CupertinoDynamicColor.resolve(this, context);
 }

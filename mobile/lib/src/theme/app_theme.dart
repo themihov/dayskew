@@ -1,94 +1,131 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
-import 'app_colors.dart';
-
-/// Theme for the DaySkew mobile app: Hack Club neo-brutalism meets
-/// Stardance retro-arcade. Thick borders, hard offset shadows, mono metrics.
+/// Typography and theme for DaySkew, following Apple's Human Interface
+/// Guidelines: a clear type ramp, generous line height, and an accent-driven
+/// Cupertino theme that adapts to the system appearance.
 abstract final class AppTheme {
-  /// Monospace family used for raw time/metric chips. Falls back gracefully
-  /// when the font is unavailable on the host platform.
-  static const String monoStack = 'monospace';
+  /// App-wide Cupertino theme. Brightness is intentionally left unset so it
+  /// follows the device's light/dark setting; the semantic color tokens
+  /// resolve accordingly.
+  static const CupertinoThemeData cupertino = CupertinoThemeData(
+    primaryColor: CupertinoColors.systemBlue,
+    applyThemeToAll: true,
+  );
 
-  static ThemeData get dark {
-    final base = ThemeData.dark(useMaterial3: true);
-    return base.copyWith(
-      scaffoldBackgroundColor: AppColors.canvas,
-      colorScheme: base.colorScheme.copyWith(
-        primary: AppColors.medium,
-        secondary: AppColors.high,
-        surface: AppColors.surface,
-        error: AppColors.conflict,
-        onPrimary: AppColors.canvas,
-        onSurface: AppColors.textPrimary,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.canvas,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontFamily: 'sans-serif',
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
-          color: AppColors.textPrimary,
-          letterSpacing: 0.5,
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surface,
-        contentTextStyle: const TextStyle(color: AppColors.textPrimary),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.border, width: 2),
-        ),
-      ),
-      dialogTheme: const DialogThemeData(backgroundColor: AppColors.surface),
-      dividerTheme: const DividerThemeData(color: AppColors.border, thickness: 2),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.medium,
-          foregroundColor: AppColors.canvas,
-          textStyle: const TextStyle(fontWeight: FontWeight.w800),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-    );
-  }
+  // --- Type ramp (sizes/weights per HIG), colors inherit from the resolved
+  // default text style so light/dark is handled automatically. ---
 
-  static TextStyle get h1 => const TextStyle(
-        fontWeight: FontWeight.w800,
-        fontSize: 26,
-        height: 1.15,
-        letterSpacing: 0.3,
-        color: AppColors.textPrimary,
-      );
+  static const TextStyle largeTitle = TextStyle(
+    fontSize: 34,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.37,
+    height: 1.15,
+  );
 
-  static TextStyle get h2 => const TextStyle(
-        fontWeight: FontWeight.w800,
-        fontSize: 18,
-        height: 1.2,
-        letterSpacing: 0.3,
-        color: AppColors.textPrimary,
-      );
+  static const TextStyle title1 = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.36,
+    height: 1.15,
+  );
 
-  static TextStyle get body => const TextStyle(
-        fontSize: 14,
-        height: 1.4,
-        color: AppColors.textPrimary,
-      );
+  static const TextStyle title2 = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.26,
+    height: 1.2,
+  );
 
-  static TextStyle get bodyMuted => const TextStyle(
-        fontSize: 13,
-        height: 1.4,
-        color: AppColors.textMuted,
-      );
+  static const TextStyle title3 = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.45,
+    height: 1.2,
+  );
 
-  static TextStyle get mono => const TextStyle(
-        fontFamily: monoStack,
-        fontSize: 13,
-        letterSpacing: 0.2,
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w600,
-      );
+  static const TextStyle headline = TextStyle(
+    fontSize: 17,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.41,
+    height: 1.3,
+  );
+
+  static const TextStyle body = TextStyle(
+    fontSize: 17,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.41,
+    height: 1.35,
+  );
+
+  static const TextStyle callout = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.32,
+    height: 1.35,
+  );
+
+  static const TextStyle subheadline = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.24,
+    height: 1.33,
+  );
+
+  static const TextStyle footnote = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.08,
+    height: 1.38,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+    height: 1.33,
+  );
+
+  static const TextStyle caption2 = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.07,
+    height: 1.36,
+  );
+
+  /// Section label above grouped content. Sentence case, secondary color,
+  /// weighted like an iOS grouped-list header.
+  static const TextStyle sectionHeader = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.08,
+    height: 1.38,
+  );
+
+  // --- Metric styles: tabular figures keep time columns from jittering. ---
+
+  static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
+
+  static const TextStyle metricLarge = TextStyle(
+    fontSize: 40,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -1.2,
+    height: 1.05,
+    fontFeatures: _tabular,
+  );
+
+  static const TextStyle metric = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.3,
+    height: 1.2,
+    fontFeatures: _tabular,
+  );
+
+  static const TextStyle metricSmall = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    letterSpacing: -0.08,
+    height: 1.2,
+    fontFeatures: _tabular,
+  );
 }

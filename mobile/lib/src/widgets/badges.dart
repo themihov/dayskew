@@ -1,62 +1,58 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_format.dart';
 
-/// Sticker-style pill tag. Rotated a hair for tactile vibes.
-class StickerBadge extends StatelessWidget {
+/// A small, Apple-style capsule badge. Tinted by default; pass
+/// [emphasized] for a solid fill (used for the locked anchor token).
+class MetaBadge extends StatelessWidget {
   final String text;
-  final Color background;
-  final Color foreground;
+  final Color color;
   final IconData? icon;
-  final double fontSize;
+  final bool emphasized;
 
-  const StickerBadge({
+  const MetaBadge({
     super.key,
     required this.text,
-    required this.background,
-    this.foreground = AppColors.canvas,
+    required this.color,
     this.icon,
-    this.fontSize = 10,
+    this.emphasized = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: -0.02,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(9999),
-          border: Border.all(color: AppColors.canvas, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: fontSize + 2, color: foreground),
-              const SizedBox(width: 3),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                fontFamily: AppTheme.monoStack,
-                fontWeight: FontWeight.w700,
-                fontSize: fontSize,
-                letterSpacing: 0.3,
-                color: foreground,
-              ),
-            ),
+    final resolved = color.rc(context);
+    final background = emphasized ? resolved : resolved.withValues(alpha: 0.15);
+    final foreground = emphasized ? CupertinoColors.white : resolved;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: foreground),
+            const SizedBox(width: 3),
           ],
-        ),
+          Text(
+            text,
+            style: AppTheme.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: foreground,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Badge trio decorating a timeline card: locked / start / end sensitivity.
+/// Badge trio decorating a task: locked / start / end sensitivity.
 class SensitivityBadges extends StatelessWidget {
   final bool isStartSensitive;
   final bool isEndSensitive;
@@ -75,29 +71,60 @@ class SensitivityBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badges = <Widget>[
-      if (isLocked)
-        const StickerBadge(
-          text: 'LOCKED',
-          background: AppColors.lockedBase,
-          foreground: AppColors.lockedBorder,
-          icon: Icons.lock_outline,
-        ),
-      if (isStartSensitive)
-        StickerBadge(
-          text: 'START \u2265 ${TimeFormat.hhmm(preferredStart)}',
-          background: AppColors.high,
-        ),
-      if (isEndSensitive)
-        StickerBadge(
-          text: 'END \u2264 ${TimeFormat.hhmm(preferredStart + duration)}',
-          background: AppColors.medium,
-        ),
-    ];
     return Wrap(
       spacing: 6,
       runSpacing: 6,
-      children: badges,
+      children: [
+        if (isLocked)
+          const MetaBadge(
+            text: 'Locked',
+            color: AppColors.locked,
+            icon: CupertinoIcons.lock_fill,
+            emphasized: true,
+          ),
+        if (isStartSensitive)
+          MetaBadge(
+            text: 'Starts ${TimeFormat.hhmmAmPm(preferredStart)}',
+            color: AppColors.high,
+            icon: CupertinoIcons.arrow_right,
+          ),
+        if (isEndSensitive)
+          MetaBadge(
+            text: 'Ends by ${TimeFormat.hhmmAmPm(preferredStart + duration)}',
+            color: AppColors.medium,
+            icon: CupertinoIcons.arrow_left,
+          ),
+      ],
+    );
+  }
+}
+
+/// Delta badge showing how far a task drifted from its preferred slot.
+class DriftBadge extends StatelessWidget {
+  final int computedStart;
+  final int preferredStart;
+
+  const DriftBadge({
+    super.key,
+    required this.computedStart,
+    required this.preferredStart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final delta = computedStart - preferredStart;
+    final onTime = delta == 0;
+    final color = onTime
+        ? AppColors.secondaryLabel
+        : (delta > 0 ? AppColors.medium : AppColors.low);
+    final icon = onTime
+        ? CupertinoIcons.checkmark
+        : (delta > 0 ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up);
+
+    return MetaBadge(
+      text: TimeFormat.drift(computedStart, preferredStart),
+      color: color,
+      icon: icon,
     );
   }
 }

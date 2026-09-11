@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'src/screens/home_screen.dart';
 import 'src/state/app_controller.dart';
@@ -33,10 +33,10 @@ class _DaySkewAppState extends State<DaySkewApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return CupertinoApp(
       title: 'DaySkew',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.cupertino,
       home: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) => HomeScreen(controller: _controller),

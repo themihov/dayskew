@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_format.dart';
-import 'neo_button.dart';
+import 'app_button.dart';
+import 'app_surface.dart';
 
-/// Wake-up trigger: one-tap "just woke up" sets the current device time and
-/// reflows. Shows the applied wake time compactly.
+/// The reflow trigger: shows the applied wake-up time and lets the user either
+/// stamp "now" with one tap or pick a different time. This is the primary
+/// action of the app, so it anchors the top of the screen.
 class ReflowHero extends StatelessWidget {
   final int wakeTime;
   final bool isReflowing;
@@ -21,65 +24,98 @@ class ReflowHero extends StatelessWidget {
     required this.onTimeTap,
   });
 
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 5) return 'Late night';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 2),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.wb_sunny_outlined,
-                color: AppColors.conflict,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                TimeFormat.hhmmAmPm(wakeTime),
-                style: AppTheme.mono.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _greeting,
+                      style: AppTheme.subheadline.copyWith(
+                        color: AppColors.secondaryLabel.rc(context),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    GestureDetector(
+                      onTap: isReflowing ? null : onTimeTap,
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            TimeFormat.hhmmAmPm(wakeTime),
+                            style: AppTheme.metricLarge,
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            CupertinoIcons.pencil,
+                            size: 16,
+                            color: AppColors.accent.rc(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Actual wake-up time',
+                      style: AppTheme.footnote.copyWith(
+                        color: AppColors.tertiaryLabel.rc(context),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
-              GestureDetector(
-                onTap: isReflowing ? null : onTimeTap,
-                child: Text(
-                  'SET',
-                  style: AppTheme.mono.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                    color: AppColors.medium,
-                  ),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.medium.rc(context).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  CupertinoIcons.sun_max_fill,
+                  size: 26,
+                  color: AppColors.medium.rc(context),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: NeoButton(
-              label: isReflowing ? 'REFLOWING\u2026' : 'JUST WOKE UP',
-              onPressed: isReflowing ? null : onJustWokeUp,
-              leading: isReflowing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: AppColors.canvas,
-                      ),
-                    )
-                  : const Icon(Icons.bolt, size: 20),
+          const SizedBox(height: 20),
+          AppButton(
+            label: isReflowing ? 'Reflowing…' : 'Just Woke Up',
+            icon: isReflowing ? null : CupertinoIcons.bolt_fill,
+            onPressed: isReflowing
+                ? null
+                : () {
+                    HapticFeedback.mediumImpact();
+                    onJustWokeUp();
+                  },
+            expanded: true,
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: AppButton(
+              label: 'Or set a different time',
+              variant: AppButtonVariant.plain,
+              small: true,
+              onPressed: isReflowing ? null : onTimeTap,
             ),
           ),
         ],

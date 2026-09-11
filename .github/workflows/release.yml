@@ -42,9 +42,9 @@ jobs:
 
             Android APK for release ${{ github.ref_name }}.
 
-            - Constraint-based reflow scheduler UI (wake-up hero, timeline, Bump Zone)
+            - Constraint-based reflow scheduler (wake-up hero, timeline, conflict resolution)
             - Points to the live backend at https://dayskew.danailmihov.com/api
-            - Neo-brutal / retro-arcade design system
+            - Apple Human Interface Guidelines design: adaptive light/dark, system colors, iOS patterns
 
             Download `DaySkew-${{ github.ref_name }}.apk` and install on any Android device.
           files: DaySkew-${{ github.ref_name }}.apk

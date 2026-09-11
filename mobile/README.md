@@ -1,17 +1,21 @@
 # DaySkew Mobile (Flutter)
 
 The Flutter client for the DaySkew scheduler — a headless constraint-based
-reflow engine. Renders the computed timeline, the wake-up "REFLOW DAY" hero,
-and the Pass 2 conflict Bump Zone per the AGENTS.md design system
-(neo-brutalism + retro arcade).
+reflow engine. Renders the computed timeline, the wake-up reflow hero, and the
+Pass 2 conflict section.
+
+The UI follows Apple's Human Interface Guidelines (see `design.md`): semantic
+system colors that adapt to light/dark, a Cupertino type ramp, grouped inset
+lists and cards, familiar sheets and action sheets, and tactile haptics.
 
 ## Features
 
-- **Reflow hero** — pick your actual wake-up time and hit REFLOW DAY.
-- **Timeline** — placed tasks as tier-colored cards with sensitivity badges,
-  mono time chips, and drift indicators.
-- **Bump Zone** — unplaceable tasks with manual-resolution actions:
-  Tomorrow (dismiss), Drop (delete), Override Time (edit).
+- **Reflow hero** — one-tap "Just Woke Up" stamps the current time and reflows,
+  or pick a specific wake time.
+- **Timeline** — placed tasks as tier-tinted cards with time column,
+  constraint badges, and drift indicators.
+- **Needs attention** — unplaceable tasks open an action sheet to Move to
+  Tomorrow, Change Time, or Drop.
 - **Task management** — create/edit/drop tasks across all CRUD endpoints.
 
 ## Install
@@ -85,8 +89,9 @@ sign-in error instead of silently doing nothing.
 - `lib/src/services/api_client.dart` — stateless REST client
 - `lib/src/state/app_controller.dart` — ChangeNotifier app state
 - `lib/src/screens/` — home (timeline + reflow) and task management screens
-- `lib/src/widgets/` — hero, timeline cards, conflict drawer, neo buttons
-- `lib/src/theme/` — color system and typography tokens
+- `lib/src/widgets/` — reflow hero, timeline cards, conflict section, buttons,
+  cards/section headers, badges, picker sheets, toasts
+- `lib/src/theme/` — semantic color system and typography tokens
 - `lib/src/utils/time_format.dart` — minutes-since-midnight formatting
 
 ## Test

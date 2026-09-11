@@ -75,6 +75,17 @@ abstract final class TimeFormat {
     return names[d.weekday - 1];
   }
 
+  /// "Tuesday" style full weekday for a "YYYY-MM-DD" string.
+  static String weekdayLong(String date) {
+    const names = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
+    ];
+    final d = tryParseDate(date);
+    if (d == null) return '?';
+    return names[d.weekday - 1];
+  }
+
   /// "Aug 26" style short label for a "YYYY-MM-DD" string.
   static String shortDate(String date) {
     final d = tryParseDate(date);
